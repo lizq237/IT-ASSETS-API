@@ -5,6 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
+//  Tabla original que te da por defecto Laravel para gestionar sesiones de usuarios y guadar datos en cache
 {
     /**
      * Run the migrations.
