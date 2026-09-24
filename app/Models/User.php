@@ -22,6 +22,9 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'organization_id',
+        'role',
+        
     ];
 
     /**
@@ -33,6 +36,11 @@ class User extends Authenticatable
         'password',
         'remember_token',
     ];
+
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new \App\Models\Scopes\TenantScope);
+    }
 
     /**
      * Get the attributes that should be cast.

@@ -5,6 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
+//tabla original que te da por defecto Laravel para gestionar trabajos en cola, procesos en segundo plano como notificaciones, correos electrónicos, etc.
 {
     /**
      * Run the migrations.
