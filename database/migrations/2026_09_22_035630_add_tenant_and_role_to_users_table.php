@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->foreignId('organization_id')->constrained('organizations')->cascadeOnDelete(); //llave foranea que se conecta con la tabla de organizations, si se borra la empresa, se borran los usuarios asociados
+            $table->foreignId('organization_id')->nullable()->constrained('organizations')->cascadeOnDelete();
             $table->string('role')->default('empleado'); // Rol del usuario que por defecto es empleado
         });
     }
