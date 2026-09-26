@@ -2,17 +2,17 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Laravel\Sanctum\HasApiTokens;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -26,7 +26,6 @@ class User extends Authenticatable
         'password',
         'organization_id',
         'role',
-        
     ];
 
     /**
@@ -42,6 +41,15 @@ class User extends Authenticatable
     protected static function booted(): void
     {
         static::addGlobalScope(new \App\Models\Scopes\TenantScope);
+    }
+
+    /**
+     * Organización (tenant) a la que pertenece el usuario.
+     * Null cuando el usuario es super_admin global.
+     */
+    public function organization(): BelongsTo
+    {
+        return $this->belongsTo(Organization::class);
     }
 
     /**

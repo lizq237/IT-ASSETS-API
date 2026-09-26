@@ -21,11 +21,11 @@ class TenantController extends Controller
             'password' => 'required|string|min:8',
         ]);
 
-        // 2. Iniciamos la transacción (si algo falla, se cancela todo)
+        // 2. Inicia la transacción (si algo falla, se cancela todo)
         DB::beginTransaction();
 
         try {
-            // 3. Crear primero la empresa (Organizacion)
+            // 3. Crear primero la empresa/organizacion
             $organization = Organization::create([
                 'company_name' => $request->empresa_nombre,
                 'RFC' => $request->rfc,
@@ -35,9 +35,9 @@ class TenantController extends Controller
             $user = User::create([
                 'name' => $request->admin_nombre,
                 'email' => $request->email,
-                'password' => Hash::make($request->password), // Encriptamos la contraseña
+                'password' => Hash::make($request->password),
                 'organization_id' => $organization->id,
-                'role' => 'Administrador de TI', // Le damos el rol máximo automáticamente
+                'role' => 'admin_ti',   //ANTES: 'Administrador de TI'
             ]);
 
             // Si todo salió bien, guardamos los cambios definitivamente
