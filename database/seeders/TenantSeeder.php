@@ -11,21 +11,7 @@ class TenantSeeder extends Seeder
 {
     public function run(): void
     {
-        /*
-        | --Super Administrador global--
-        | Credenciales de desarrollo
-        |   email:    super@sysbase.com
-        |   password: password123
-        */
-        User::create([
-            'name' => 'Super Admin',
-            'email' => 'super@sysbase.com',
-            'password' => Hash::make('password123'),
-            'organization_id' => null,
-            'role' => 'super_admin',
-        ]);
-
-        /*Organización de prueba 1*/
+        /* Organización de prueba 1 */
         $org1 = Organization::create([
             'company_name' => 'FC Barcelona',
         ]);
@@ -38,7 +24,7 @@ class TenantSeeder extends Seeder
             'role' => 'admin_ti',
         ]);
 
-        /*Organización de prueba 2*/
+        /* Organización de prueba 2 */
         $org2 = Organization::create([
             'company_name' => 'Facultad de Informática Culiacán',
         ]);
