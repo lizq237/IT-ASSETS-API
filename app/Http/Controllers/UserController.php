@@ -8,27 +8,45 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
+    /**
+     * Obtener la lista de usuarios/organizaciones.
+     */
+    public function index()
+    {
+        return response()->json(User::latest()->get(), 200);
+    }
+
+    /**
+     * Registrar un nuevo usuario o empresa.
+     */
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|string|email|max:255|unique:users',
+            'email'    => 'required|email|unique:users,email',
             'password' => 'required|string|min:8',
-            'role'     => 'required|string',
+        ], [
+            'email.required'    => 'El correo electrónico es obligatorio.',
+            'email.email'       => 'Ingresa un correo electrónico válido.',
+            'email.unique'      => 'Este correo electrónico ya está registrado. Intenta con otro.',
+            'password.required' => 'La contraseña es obligatoria.',
+            'password.min'      => 'La contraseña debe tener al menos 8 caracteres.',
         ]);
 
-        // Inyecta el organization_id del admin autenticado
+        // Mapeo flexible de nombres
+        $userName = $request->input('admin_nombre') 
+            ?? $request->input('name') 
+            ?? 'Administrador';
+
         $user = User::create([
-            'name'            => $validated['name'],
-            'email'           => $validated['email'],
-            'password'        => Hash::make($validated['password']),
-            'role'            => $validated['role'],
-            'organization_id' => $request->user()->organization_id,
+            'name'     => $userName,
+            'email'    => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'role'     => $request->input('role', 'admin_ti'),
         ]);
 
         return response()->json([
-            'message' => 'Usuario creado exitosamente',
-            'user'    => $user,
+            'message' => 'Registrado correctamente.',
+            'user'    => $user
         ], 201);
     }
 }
