@@ -15,6 +15,7 @@ Route::middleware('auth:sanctum')->group(function () {
         // Rutas para consultar la lista de usuarios / organizaciones
         Route::get('/users', [UserController::class, 'index']);
         Route::get('/organizaciones', [UserController::class, 'index']);
+        Route::post('/register-tenant', [UserController::class, 'store']);
         
         // Ruta para registrar nuevos usuarios / empresas
         Route::post('/users', [UserController::class, 'store']);
