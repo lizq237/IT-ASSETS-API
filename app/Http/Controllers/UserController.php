@@ -21,31 +21,30 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
+        // validamos los datos basicos que envia el formulario de React
         $validated = $request->validate([
+            'name'     => 'required|string|max:255',
             'email'    => 'required|email|unique:users,email',
             'password' => 'required|string|min:8',
         ], [
+            'name.required'     => 'El nombre del empleado es obligatorio.',
             'email.required'    => 'El correo electrónico es obligatorio.',
-            'email.email'       => 'Ingresa un correo electrónico válido.',
-            'email.unique'      => 'Este correo electrónico ya está registrado. Intenta con otro.',
+            'email.unique'      => 'Este correo electrónico ya está registrado.',
             'password.required' => 'La contraseña es obligatoria.',
             'password.min'      => 'La contraseña debe tener al menos 8 caracteres.',
         ]);
 
-        // Mapeo flexible de nombres
-        $userName = $request->input('admin_nombre') 
-            ?? $request->input('name') 
-            ?? 'Administrador';
-
+        // creamos al empleado inyectando el id de la empresa del admin
         $user = User::create([
-            'name'     => $userName,
-            'email'    => $validated['email'],
-            'password' => Hash::make($validated['password']),
-            'role'     => $request->input('role', 'admin_ti'),
+            'name'            => $validated['name'],
+            'email'           => $validated['email'],
+            'password'        => Hash::make($validated['password']),
+            'role'            => 'empleado', // Rol por defecto
+            'organization_id' => $request->user()->organization_id,
         ]);
 
         return response()->json([
-            'message' => 'Registrado correctamente.',
+            'message' => 'Empleado registrado correctamente en tu empresa.',
             'user'    => $user
         ], 201);
     }

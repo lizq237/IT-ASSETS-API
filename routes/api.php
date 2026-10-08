@@ -2,9 +2,10 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\TenantController; 
+use App\Http\Controllers\OrganizationController; 
 use Illuminate\Support\Facades\Route;
 
-// Ruta de Login nombrada para evitar el error "Route [login] not defined"
 Route::post('/login', [AuthController::class, 'login'])->name('login');
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -12,12 +13,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
 
     Route::middleware('role:admin_ti,super_admin')->group(function () {
-        // Rutas para consultar la lista de usuarios / organizaciones
-        Route::get('/users', [UserController::class, 'index']);
-        Route::get('/organizaciones', [UserController::class, 'index']);
-        Route::post('/register-tenant', [UserController::class, 'store']);
+    
+        Route::get('/organizaciones', [OrganizationController::class, 'index']);
+        Route::post('/register-tenant', [TenantController::class, 'store']);
         
-        // Ruta para registrar nuevos usuarios / empresas
+        
+        Route::get('/users', [UserController::class, 'index']);
         Route::post('/users', [UserController::class, 'store']);
     });
 });

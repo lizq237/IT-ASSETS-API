@@ -2,56 +2,57 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Organization;
 use App\Models\User;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class TenantController extends Controller
 {
-    public function registerTenant(Request $request)
+    /**
+     * Registrar una nueva empresa (tenant) y a su administrador principal.
+     */
+    public function store(Request $request)
     {
-        // 1. Validar que React nos envíe toda la información necesaria
-        $request->validate([
+        // 1. Validar los datos exactos que envía React
+        $validated = $request->validate([
             'empresa_nombre' => 'required|string|max:255',
-            'rfc' => 'nullable|string|max:13',
-            'admin_nombre' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8',
+            'rfc'            => 'nullable|string|max:13',
+            'admin_nombre'   => 'required|string|max:255',
+            'email'          => 'required|email|unique:users,email',
+            'password'       => 'required|string|min:8',
         ]);
 
-        // 2. Inicia la transacción (si algo falla, se cancela todo)
+        // 2. Usar una transacción para asegurar que ambos registros se guarden o ninguno
         DB::beginTransaction();
 
         try {
-            // 3. Crear primero la empresa/organizacion
+            //Crear la organización primero
             $organization = Organization::create([
-                'company_name' => $request->empresa_nombre,
-                'RFC' => $request->rfc,
+                'company_name' => $validated['empresa_nombre'],
+                'RFC'  => $validated['rfc'] ?? null,
             ]);
 
-            // 4. Crear al usuario y asignarlo a la empresa recién creada
+            // crear al administrador y amarrarlo a la organizacion recien creada
             $user = User::create([
-                'name' => $request->admin_nombre,
-                'email' => $request->email,
-                'password' => Hash::make($request->password),
-                'organization_id' => $organization->id,
-                'role' => 'admin_ti',   //ANTES: 'Administrador de TI'
+                'name'            => $validated['admin_nombre'],
+                'email'           => $validated['email'],
+                'password'        => Hash::make($validated['password']),
+                'role'            => 'admin_ti', 
+                'organization_id' => $organization->id, 
             ]);
 
-            // Si todo salió bien, guardamos los cambios definitivamente
-            DB::commit();
+            DB::commit(); // Confirmar los cambios en la base de datos
 
             return response()->json([
-                'message' => 'Empresa y administrador registrados con éxito.',
+                'message' => 'Empresa y usuario registrados correctamente.',
                 'organization' => $organization,
                 'user' => $user
             ], 201);
 
         } catch (\Exception $e) {
-            // Si hubo un error, deshacemos los cambios para no dejar datos a medias
-            DB::rollBack();
+            DB::rollBack(); // Si algo falla, deshacemos todo para no dejar datos huerfanos
             return response()->json([
                 'message' => 'Hubo un error al registrar la empresa.',
                 'error' => $e->getMessage()
