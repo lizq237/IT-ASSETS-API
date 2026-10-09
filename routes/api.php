@@ -5,6 +5,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\TenantController; 
 use App\Http\Controllers\OrganizationController; 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\DashboardController;
 
 Route::post('/login', [AuthController::class, 'login'])->name('login');
 
@@ -20,5 +21,7 @@ Route::middleware('auth:sanctum')->group(function () {
         
         Route::get('/users', [UserController::class, 'index']);
         Route::post('/users', [UserController::class, 'store']);
+
+        Route::get('/dashboard/resumen', [DashboardController::class, 'resumen']);
     });
 });

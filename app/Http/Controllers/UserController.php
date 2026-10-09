@@ -26,6 +26,7 @@ class UserController extends Controller
             'name'     => 'required|string|max:255',
             'email'    => 'required|email|unique:users,email',
             'password' => 'required|string|min:8',
+            'role'     => 'required|in:tecnico,empleado',
         ], [
             'name.required'     => 'El nombre del empleado es obligatorio.',
             'email.required'    => 'El correo electrónico es obligatorio.',
@@ -39,7 +40,7 @@ class UserController extends Controller
             'name'            => $validated['name'],
             'email'           => $validated['email'],
             'password'        => Hash::make($validated['password']),
-            'role'            => 'empleado', // Rol por defecto
+            'role'            => $validated['role'], // 
             'organization_id' => $request->user()->organization_id,
         ]);
 
