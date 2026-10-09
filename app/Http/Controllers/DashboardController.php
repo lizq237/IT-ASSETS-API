@@ -33,7 +33,7 @@ class DashboardController extends Controller
                 'usuarios' => [
                     'total'       => User::count(),
                     'admins'      => User::where('role', 'admin_ti')->count(),
-                    'responsables' => User::where('role', 'responsable')->count(),
+                    'responsables' => User::where('role', 'empleado')->count(),
                     'tecnicos'    => User::where('role', 'tecnico')->count(),
                 ],
                 'tickets' => [
