@@ -23,6 +23,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/users', [UserController::class, 'store']);
         Route::delete('/users/{id}', [UserController::class, 'destroy']);
 
+        //en lugar de crear las 5 rutas manualmente, podemos usar apiResource para crear todas las rutas del categoryController de una sola vez.
+        Route::apiResource('categories', CategoryController::class);
+
         Route::get('/dashboard/resumen', [DashboardController::class, 'resumen']);
     });
 });
