@@ -44,7 +44,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/users', [UserController::class, 'index']);
         Route::post('/users', [UserController::class, 'store']);
         Route::delete('/users/{id}', [UserController::class, 'destroy']);
-
-        Route::get('/dashboard/resumen', [DashboardController::class, 'resumen']);
     });
+
+    Route::get('/dashboard/resumen', [DashboardController::class, 'resumen']);
 });
