@@ -7,6 +7,7 @@ use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\TenantController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AssetController;
 
 //Rutas públicas
 
@@ -28,6 +29,17 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/categories', [CategoryController::class, 'store']);
         Route::put('/categories/{id}', [CategoryController::class, 'update']);
         Route::delete('/categories/{id}', [CategoryController::class, 'destroy']);
+    });
+
+    //Equipos (Assets) — LECTURA | Cualquier usuario autenticado (admin_ti, técnico, empleado)
+    Route::get('/assets', [AssetController::class, 'index']);
+    Route::get('/assets/{id}', [AssetController::class, 'show']);
+
+    //Equipos (Assets) — ESCRITURA | admin_ti
+    Route::middleware('role:admin_ti')->group(function () {
+        Route::post('/assets', [AssetController::class, 'store']);
+        Route::put('/assets/{id}', [AssetController::class, 'update']);
+        Route::delete('/assets/{id}', [AssetController::class, 'destroy']);
     });
 
     // Organizaciones y alta de tenants
