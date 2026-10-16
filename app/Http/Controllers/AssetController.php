@@ -7,6 +7,19 @@ use Illuminate\Validation\Rule;
 
 class AssetController extends Controller
 {
+        // Listar los equipos de la organización autenticada
+    public function index(Request $request)
+    {
+        $assets = Asset::query()
+            ->where('organization_id', $request->user()->organization_id)
+            ->with('category')
+            ->latest()
+            ->get();
+
+        return response()->json([
+            'data' => $assets
+        ]);
+    }
     // guardar un nuevo equipo  en la ruta (POST /api/assets)
     public function store(Request $request)
     {
