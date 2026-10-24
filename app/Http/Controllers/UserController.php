@@ -25,7 +25,7 @@ class UserController extends Controller
             'name'     => 'required|string|max:255',
             'email'    => 'required|email|unique:users,email',
             'password' => 'required|string|min:8',
-            'role'     => 'required|in:tecnico,empleado',
+            'role'     => 'required|in:tecnico,responsable',
         ], [
             'name.required'     => 'El nombre del empleado es obligatorio.',
             'email.required'    => 'El correo electrónico es obligatorio.',
