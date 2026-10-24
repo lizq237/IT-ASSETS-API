@@ -13,7 +13,6 @@ return new class extends Migration
     {
         Schema::create('assets', function (Blueprint $table) {
             $table->id();
-            $table->timestamps();
             //columnas con relaciones a otra tablas 
             $table->foreignId('organization_id')->constrained()->onDelete('cascade');
             $table->foreignId('category_id')->constrained();
