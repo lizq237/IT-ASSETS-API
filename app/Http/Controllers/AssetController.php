@@ -34,6 +34,14 @@ class AssetController extends Controller{
                 Rule::exists('users', 'id')
                 ->where('organization_id', $user->organization_id),
             ],
+
+            'code' => [
+                'required',
+                'string',
+                Rule::unique('assets')->where(fn ($query) => $query->where('organization_id', $user->organization_id))
+            ],
+
+
             'serial_number' => [
                 'nullable',
                 'string',
