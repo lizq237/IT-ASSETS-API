@@ -20,6 +20,11 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
+        if (!$request->user()->organization_id) {
+            return response()->json([
+                'message' => 'Tu cuenta no tiene una organización asignada.'
+            ], 403);
+        }
         // validamos los datos basicos que envia el formulario de React
         $validated = $request->validate([
             'name'     => 'required|string|max:255',
@@ -52,13 +57,18 @@ class UserController extends Controller
     /**
      * Eliminar un usuario por su ID.
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
-        $user = User::find($id);
+        $user = User::findOrFail($id);
+        if ($user->id === $request->user()->id) {
+            return response()->json([
+                'message' => 'No puedes eliminar tu propia cuenta.'
+                ], 403);
+        }
+        
         $user->delete();
-
         return response()->json([
-            'message' => 'Usuario eliminado correctamente'
-        ], 200);
+            'message' => 'Usuario eliminado correctamente.'
+            ], 200);
     }
 }

@@ -18,6 +18,8 @@ class AuthController extends Controller
         $credentials = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required', 'string'],
+            'device_name' => ['sometimes', 'string', 'in:web,mobile'],
+
         ]);
 
         $user = User::where('email', $credentials['email'])->first();
@@ -30,9 +32,9 @@ class AuthController extends Controller
 
         // Revoca tokens previos con el mismo nombre para no acumular basura.
         // (Cada login reemplaza al anterior del mismo dispositivo.)
-        $user->tokens()->where('name', 'web')->delete();
-
-        $token = $user->createToken('web')->plainTextToken;
+        $deviceName = $credentials['device_name'] ?? 'web';
+        $user->tokens()->where('name', $deviceName)->delete();
+        $token = $user->createToken($deviceName)->plainTextToken;
 
         return response()->json([
             'access_token' => $token,

@@ -8,6 +8,8 @@ use App\Http\Controllers\TenantController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AssetController;
+use App\Http\Controllers\BrandController;
+use App\Http\Controllers\LocationController;
 
 //Rutas públicas
 
@@ -20,15 +22,30 @@ Route::middleware('auth:sanctum')->group(function (){
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
 
-    //Categorías — LECTURA | Cualquier usuario autenticado (admin_ti, técnico, empleado)
+    //Catálogos (Categorías, Marcas, Ubicaciones) — LECTURA | Cualquier usuario autenticado
     Route::get('/categories', [CategoryController::class, 'index']);
     Route::get('/categories/{id}', [CategoryController::class, 'show']);
+
+    Route::get('/brands', [BrandController::class, 'index']);
+    Route::get('/brands/{id}', [BrandController::class, 'show']);
+
+    Route::get('/locations', [LocationController::class, 'index']);
+    Route::get('/locations/{id}', [LocationController::class, 'show']);
+
 
     //Categorías — ESCRITURA | Solo admin_ti
     Route::middleware('role:admin_ti')->group(function (){
         Route::post('/categories', [CategoryController::class, 'store']);
         Route::put('/categories/{id}', [CategoryController::class, 'update']);
         Route::delete('/categories/{id}', [CategoryController::class, 'destroy']);
+
+        Route::post('/brands', [BrandController::class, 'store']);
+        Route::put('/brands/{id}', [BrandController::class, 'update']);
+        Route::delete('/brands/{id}', [BrandController::class, 'destroy']);
+
+        Route::post('/locations', [LocationController::class, 'store']);
+        Route::put('/locations/{id}', [LocationController::class, 'update']);
+        Route::delete('/locations/{id}', [LocationController::class, 'destroy']);
     });
 
     //Equipos (Assets) — LECTURA | Cualquier usuario autenticado (admin_ti, técnico, empleado)
@@ -57,13 +74,12 @@ Route::middleware('auth:sanctum')->group(function (){
         Route::delete('/organizaciones/{organization}', [OrganizationController::class, 'destroy']);
     });
 
-    //Usuarios y dashboard
-    //Compartido: admin_ti y super_admin
-    Route::middleware('role:admin_ti,super_admin')->group(function (){
+    // Usuarios de la organización — solo admin_ti
+    Route::middleware('role:admin_ti')->group(function (){
         Route::get('/users', [UserController::class, 'index']);
         Route::post('/users', [UserController::class, 'store']);
         Route::delete('/users/{id}', [UserController::class, 'destroy']);
-    });
+});
 
     Route::get('/dashboard/resumen', [DashboardController::class, 'resumen']);
 });

@@ -29,11 +29,16 @@ class TenantSeeder extends Seeder
             'company_name' => 'Facultad de Informática Culiacán',
         ]);
 
+        /* Organización de prueba 3 */
+        $org3 = Organization::create([
+            'company_name' => 'Facultad de Medicina Culiacán',
+        ]);
+
         User::create([
-            'name' => 'Admin FIC',
-            'email' => 'admin@fic.edu.mx',
+            'name' => 'alejandro mellado',
+            'email' => 'alemellado@gmail.com',
             'password' => Hash::make('password123'),
-            'organization_id' => $org2->id,
+            'organization_id' => $org3->id,
             'role' => 'admin_ti',
         ]);
     }

@@ -12,12 +12,18 @@ class TenantScope implements Scope
      * Apply the scope to a given Eloquent query builder.
      */
     public function apply(Builder $builder, Model $model): void
+{
+    if (auth()->check()) {
+        $user = auth()->user();
 
-    {
-        //validamos que el usario tenga una sesion activa y que tenga un organization_id, si es asi filtramos por el organization_id del usuario
-        if (auth()->check() && Auth()->user()->organization_id) {
-            // Este scope pega a la consulta un where organization_id = organization_id del usuario logueado
-            $builder->where($model->getTable() . '.organization_id', auth()->user()->organization_id);
+        if ($user->organization_id) {
+            $builder->where(
+                $model->getTable() . '.organization_id',
+                $user->organization_id
+            );
+        } elseif ($user->role !== 'super_admin') {
+            $builder->whereRaw('1 = 0');
         }
     }
+}
 }

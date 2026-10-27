@@ -15,9 +15,9 @@ class Asset extends Model{
         'assigned_user_id',
         'code',
         'serial_number',
-        'brand',
+        'brand_id',
         'model',
-        'location',
+        'location_id',
         'status',
         'purchase_date'
     ];
@@ -32,5 +32,13 @@ class Asset extends Model{
 
     public function assignedUser(){
         return $this->belongsTo(User::class, 'assigned_user_id');
+    }
+
+    public function brand(){
+        return $this->belongsTo(Brand::class);
+    }
+
+    public function location(){
+        return $this->belongsTo(Location::class);
     }
 }

@@ -10,7 +10,7 @@ class AssetController extends Controller{
     public function index(Request $request){
         $assets = Asset::query()
             ->where('organization_id', $request->user()->organization_id)
-            ->with(['category', 'assignedUser']) // Incluimos al usuario asignado
+            ->with(['category', 'assignedUser', 'brand', 'location']) // Incluimos al usuario asignado
             ->latest()
             ->get();
 
@@ -23,21 +23,38 @@ class AssetController extends Controller{
         $user = $request->user();
 
         $validated = $request->validate([
-            'category_id' => 'required|exists:categories,id',
-            'assigned_user_id' => 'nullable|exists:users,id',
-            'code' => [
+            'category_id' => [
                 'required',
-                'string',
-                Rule::unique('assets')->where(fn ($query) => $query->where('organization_id', $user->organization_id))
+                Rule::exists('categories', 'id')
+                ->where('organization_id', $user->organization_id),
+            ],
+
+            'assigned_user_id' => [
+                'nullable',
+                Rule::exists('users', 'id')
+                ->where('organization_id', $user->organization_id),
             ],
             'serial_number' => [
                 'nullable',
                 'string',
                 Rule::unique('assets')->where(fn ($query) => $query->where('organization_id', $user->organization_id))
             ],
-            'brand' => 'nullable|string',
+            
+
+            'brand_id' => [
+                'nullable',
+                Rule::exists('brands', 'id')
+                ->where('organization_id', $user->organization_id),
+            ],
+
             'model' => 'required|string',
-            'location' => 'nullable|string',
+            
+            'location_id' => [
+                'nullable',
+                Rule::exists('locations', 'id')
+                ->where('organization_id', $user->organization_id),
+            ],
+
             'status' => 'required|in:activo,mantenimiento,baja',
             'purchase_date' => 'nullable|date'
         ]);
