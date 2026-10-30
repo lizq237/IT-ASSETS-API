@@ -19,6 +19,20 @@ class AssetController extends Controller{
         ]);
     }
 
+    // HU-09 / Tarea #95: inventario personal del usuario autenticado.
+    public function employeeAssets(Request $request){
+        $user = $request->user();
+
+        $assets = Asset::query()
+            ->where('organization_id', $user->organization_id)
+            ->where('assigned_user_id', $user->id)
+            ->with(['category', 'brand', 'location'])
+            ->latest()
+            ->get();
+
+        return response()->json($assets);
+    }
+
     public function store(Request $request){
         $user = $request->user();
 

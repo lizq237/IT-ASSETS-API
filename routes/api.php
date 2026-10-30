@@ -49,6 +49,9 @@ Route::middleware('auth:sanctum')->group(function (){
     });
 
     //Equipos (Assets) — LECTURA | Cualquier usuario autenticado (admin_ti, técnico, empleado)
+    // HU-09 / Tarea #95: equipos asignados al usuario autenticado.
+    Route::get('/employee/assets', [AssetController::class, 'employeeAssets']);
+
     Route::get('/assets', [AssetController::class, 'index']);
     Route::get('/assets/{id}', [AssetController::class, 'show']);
 
