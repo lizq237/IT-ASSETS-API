@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AssetController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\LocationController;
+use App\Http\Controllers\TicketController;
+
 
 //Rutas públicas
 
@@ -51,6 +53,7 @@ Route::middleware('auth:sanctum')->group(function (){
     //Equipos (Assets) — LECTURA | Cualquier usuario autenticado (admin_ti, técnico, empleado)
     // HU-09 / Tarea #95: equipos asignados al usuario autenticado.
     Route::get('/employee/assets', [AssetController::class, 'employeeAssets']);
+    Route::post('/employee/tickets', [TicketController::class, 'store']);
 
     Route::get('/assets', [AssetController::class, 'index']);
     Route::get('/assets/{id}', [AssetController::class, 'show']);

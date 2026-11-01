@@ -22,6 +22,11 @@ class AssetController extends Controller{
     // HU-09 / Tarea #95: inventario personal del usuario autenticado.
     public function employeeAssets(Request $request){
         $user = $request->user();
+        if (!$user->organization_id) {
+            return response()->json([
+                'message' => 'Tu cuenta no tiene una organización asignada.'
+                ], 403);
+        }
 
         $assets = Asset::query()
             ->where('organization_id', $user->organization_id)
@@ -30,8 +35,18 @@ class AssetController extends Controller{
             ->latest()
             ->get();
 
-        return response()->json($assets);
-    }
+        return response()->json($assets->map(function ($asset) {
+            return [
+                'id' => (string) $asset->id,
+                'code' => $asset->code,
+                'type' => $asset->category?->name,
+                'model' => $asset->model,
+                'serial_number' => $asset->serial_number,
+                'status' => $asset->status,
+                'created_at' => $asset->created_at?->toISOString(),
+                ];
+                }));
+        }
 
     public function store(Request $request){
         $user = $request->user();
