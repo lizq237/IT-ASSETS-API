@@ -35,7 +35,7 @@ return [
         'mongodb' => [
             'driver' => 'mongodb',
             'dsn' => env('MONGODB_URI'),
-            'database' => env('MONGODB_DATABASE', 'sysbase_tickets'),
+            'database' => env('MONGODB_DATABASE', 'sysbase'),
         ],
 
         'sqlite' => [

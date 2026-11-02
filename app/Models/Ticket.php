@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use MongoDB\Laravel\Eloquent\Model;
-
+// use Illuminate\Database\Eloquent\Model;
 class Ticket extends Model
 {
     protected $connection = 'mongodb';
@@ -16,6 +16,7 @@ protected $fillable = [
     'description',
     'priority',
     'status',
+    'image_path',
 ];
 
 protected $casts = [

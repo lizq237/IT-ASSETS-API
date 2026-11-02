@@ -54,6 +54,7 @@ Route::middleware('auth:sanctum')->group(function (){
     // HU-09 / Tarea #95: equipos asignados al usuario autenticado.
     Route::get('/employee/assets', [AssetController::class, 'employeeAssets']);
     Route::post('/employee/tickets', [TicketController::class, 'store']);
+    Route::get('/tickets/{id}/evidence', [TicketController::class, 'getEvidence']);//COnsulta evidencia
 
     Route::get('/assets', [AssetController::class, 'index']);
     Route::get('/assets/{id}', [AssetController::class, 'show']);
