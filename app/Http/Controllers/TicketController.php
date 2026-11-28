@@ -4,11 +4,60 @@ namespace App\Http\Controllers;
 
 use App\Models\Asset;
 use App\Models\Ticket;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class TicketController extends Controller
 {
+    // HU Kanban / #24: alcance común de los tickets según el rol.
+    private function visibleTickets($user)
+    {
+        $query = Ticket::where('organization_id', $user->organization_id);
+        if ($user->role === 'admin_ti') {
+            return $query;
+        }
+        if ($user->role === 'tecnico') {
+            return $query->where(function ($query) use ($user) {
+                $query->where('assigned_technician_id', $user->id)
+                    ->orWhere(function ($query) {
+                        $query->whereNull('assigned_technician_id')->where('status', 'abierto');
+                    });
+            });
+        }
+        return $query->where('user_id', $user->id);
+    }
+
+    public function index(Request $request)
+    {
+        $user = $request->user();
+        abort_unless($user->organization_id && in_array($user->role, ['admin_ti', 'tecnico'], true), 403);
+
+        $tickets = $this->visibleTickets($user)->orderBy('created_at', 'desc')->get();
+        // Consultas agrupadas a la base relacional, sin consultas por cada tarjeta.
+        $assets = Asset::withTrashed()->where('organization_id', $user->organization_id)
+            ->whereIn('id', $tickets->pluck('asset_id')->filter()->unique()->values()->all())
+            ->with('location')->get()->keyBy('id');
+        $users = User::where('organization_id', $user->organization_id)
+            ->whereIn('id', $tickets->pluck('user_id')->filter()->unique()->values()->all())
+            ->get(['id', 'name'])->keyBy('id');
+
+        return response()->json($tickets->map(function ($ticket) use ($assets, $users) {
+            $asset = $assets->get($ticket->asset_id);
+            $reporter = $users->get($ticket->user_id);
+            return array_merge($ticket->toArray(), [
+                'id' => (string) $ticket->id,
+                'asset' => $asset ? [
+                    'id' => $asset->id, 'code' => $asset->code, 'model' => $asset->model,
+                    'location' => $asset->location?->name,
+                ] : null,
+                'reporter' => $reporter ? ['id' => $reporter->id, 'name' => $reporter->name] : null,
+                'has_evidence' => (bool) $ticket->image_path,
+                'evidence_url' => $ticket->image_path ? '/api/tickets/'.$ticket->id.'/evidence' : null,
+            ]);
+        })->values());
+    }
+
     public function store(Request $request)
     {
         $user = $request->user();
@@ -77,8 +126,9 @@ class TicketController extends Controller
     public function getEvidence(Request $request, $id)
     {
         // Se busca el ticket por su ID de MongoDB
-        $ticket = Ticket::find($id);
-        if (! $ticket || $ticket->organization_id !== $request->user()->organization_id) {
+        abort_unless($request->user()->organization_id, 403);
+        $ticket = $this->visibleTickets($request->user())->find($id);
+        if (! $ticket) {
             return response()->json(['message' => 'Ticket no encontrado o sin permisos.'], 404);
         }
 
@@ -95,6 +145,8 @@ class TicketController extends Controller
     {
         $user = $request->user();
 
+        abort_unless($user->organization_id, 403);
+
         // Filtro de el usuario y su organización
         $tickets = Ticket::where('user_id', $user->id)
             ->where('organization_id', $user->organization_id)
@@ -104,44 +156,61 @@ class TicketController extends Controller
         return response()->json($tickets, 200);
     }
 
-    // Agregar comentario y control de actividad
+    // #30: mantiene comentarios existentes y agrega notas de resolución.
     public function addComment(Request $request, $id)
     {
         $user = $request->user();
+        abort_unless($user->organization_id, 403);
         $validated = $request->validate([
             'message' => 'required|string|max:1000',
+            'is_resolution' => 'sometimes|boolean',
+            'resolve' => 'sometimes|boolean',
         ]);
-
-        $ticket = Ticket::find($id);
-
-        // Validamos que exista y que pertenezca al usuario o a su organización
-        if (! $ticket || ($ticket->user_id !== $user->id && $ticket->organization_id !== $user->organization_id)) {
-            return response()->json(['message' => 'Ticket no encontrado o sin permisos.'], 404);
+        $isResolution = (bool) ($validated['is_resolution'] ?? false);
+        $resolve = (bool) ($validated['resolve'] ?? false);
+        abort_if(($isResolution || $resolve) && ! in_array($user->role, ['admin_ti', 'tecnico'], true), 403);
+        if ($resolve && ! $isResolution) {
+            return response()->json(['message' => 'Marca el comentario como resolución.'], 422);
         }
 
-        // Creamos el objeto del comentario
-        $newComment = [
+        $ticket = $this->visibleTickets($user)->find($id);
+        abort_unless($ticket, 404);
+        if ($isResolution && $ticket->status === 'cerrado') {
+            return response()->json(['message' => 'El ticket está cerrado.'], 422);
+        }
+
+        $now = now();
+        $comment = [
             'user_id' => $user->id,
             'user_name' => $user->name,
             'role' => $user->role,
             'message' => $validated['message'],
-            'created_at' => now()->toISOString(),
+            'is_resolution' => $isResolution,
+            'created_at' => $now->toISOString(),
         ];
+        $fields = ['last_comment_by' => $user->id, 'updated_at' => $now];
+        if ($isResolution) {
+            $fields['resolution_notes'] = $validated['message'];
+            $fields['resolved_at'] = $now;
+        }
+        if ($resolve) {
+            $fields['status'] = 'resuelto';
+        }
+        // Al resolver un ticket disponible, queda asociado al técnico que lo atendió.
+        if ($isResolution && $user->role === 'tecnico' && ! $ticket->assigned_technician_id) {
+            $fields['assigned_technician_id'] = $user->id;
+        }
+        $query = $this->visibleTickets($user)->whereKey($id);
+        if ($isResolution) {
+            $query->where('status', '!=', 'cerrado');
+        }
+        // Una sola operación MongoDB evita perder comentarios concurrentes.
+        $updated = $query->toBase()->update(['$push' => ['comments' => $comment], '$set' => $fields]);
+        abort_unless($updated, 409, 'El ticket cambió. Actualiza la consulta.');
 
-        // Obtenemos los comentarios actuales (si no hay, entonces eun arreglo vacío)
-        $comments = $ticket->comments ?? [];
-
-        $comments[] = $newComment;
-
-        // Actualizamos el ticket en MongoDB
-        $ticket->comments = $comments;
-        $ticket->last_comment_by = $user->id;
-        $ticket->save();
-
-        // Hilo actualizado, delvolvemos
         return response()->json([
             'message' => 'Comentario agregado correctamente.',
-            'ticket' => $ticket,
-        ], 200);
+            'ticket' => Ticket::where('organization_id', $user->organization_id)->find($id),
+        ]);
     }
 }
