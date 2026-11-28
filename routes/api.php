@@ -54,6 +54,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/employee/tickets', [TicketController::class, 'store']);
     Route::get('/tickets/{id}/evidence', [TicketController::class, 'getEvidence']); // COnsulta evidencia
 
+    Route::get('/tickets', [TicketController::class, 'index'])->middleware('role:admin_ti,tecnico');
+
     Route::get('/employee/tickets', [TicketController::class, 'employeeTickets']);
     Route::post('/tickets/{id}/comments', [TicketController::class, 'addComment']);
 
